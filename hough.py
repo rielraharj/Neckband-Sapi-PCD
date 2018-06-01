@@ -1,8 +1,12 @@
 import cv2
 import numpy as np
-
+import csv
 #i=1
-for i in range(10,11):
+
+# file = open("datavector.csv","w")
+
+for i in range(1,10):
+    neck_class = 3
     print (i)
     x=str(i)
     print(x)
@@ -21,6 +25,8 @@ for i in range(10,11):
     im_biner = cv2.cvtColor(im_gray, cv2.COLOR_GRAY2BGR)
     circles = cv2.HoughCircles(im_gray, cv2.HOUGH_GRADIENT,1,100,param1=290, param2=55,
                                minRadius=0, maxRadius=0)
+    arr = []
+    v = []
     try:
         circles = np.uint16(np.around(circles))
         # cv2.imshow("hasil", circles)
@@ -47,20 +53,68 @@ for i in range(10,11):
 
         hasil_crop = im_hasil[x:x + 112, y - 56:y + 56]  # im awe [y,x]
 
-        # cv2.imshow("hasil crop", hasil_crop)
+        cv2.imshow("hasil crop", hasil_crop)
         thresh = 130
 
         kernel = np.ones((5, 5), np.uint8)
 
         crop_biner = cv2.threshold(hasil_crop, thresh, 255, cv2.THRESH_BINARY)[1]
-        cv2.imshow("hasil circle crop biner", crop_biner)
+        #cv2.imshow("hasil circle crop biner", crop_biner)
 
-        # cv2.imwrite(name,crop_biner)
+
+
+        cv2.imwrite(name,crop_biner)
+        # print("aaa")
+        row, col= crop_biner.shape
+        print(row,col)
+
+        for r in range(0,row):
+            a = 0
+            for c in range(0,col):
+                if crop_biner[r,c]==255:
+                    crop_biner[r,c]=1
+                a+=crop_biner[r,c]
+            v.append(a)
+        #     print(v)
+        # print(r)
+        print(len(v))
+        print("tipe",type(v))
+        print(v)
+        # max=max(v)
+        v=v/max(v)
+        v=[int(round(l)) for l in v]
+
+        arr.append(name)
+        for d in v:
+            arr.append(d)
+        arr.append(neck_class)
+        print(arr)
+        # wibu.append(arr[0])
+        # for i in arr[1]:
+        #     wibu.append(i)
+        # wibu.append(arr[2])
+        #
+        # print(wibu)
+
+
+
+        # arr_np = np.array(arr)
+        csvfile = "datavector.csv"
+
+        with open(csvfile, 'a+',newline='') as output:
+            writer = csv.writer(output, lineterminator=',')
+            for val in arr[:-1]:
+                writer.writerow([val])
+            writer = csv.writer(output, lineterminator='\n')
+            writer.writerow([arr[-1]])
+        # csv.writer("vectorkalung")
+        #
+        # np.savetxt("datavectorkalung.csv",arr,delimiter=",")
+
         # img_dilation = cv2.dilate(crop_biner, kernel, iterations=1)
         # cv2.imshow("dilasi", img_dilation)
         # img_erosion = cv2.erode(img_dilation, kernel, iterations=1)
         # cv2.imshow("akhir", img_erosion)
-        cv2.waitKey()
 
     except Exception:
         pass
