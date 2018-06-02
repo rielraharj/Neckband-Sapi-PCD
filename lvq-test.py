@@ -1,14 +1,34 @@
 import cv2
 import numpy as np
-import csv
-import glob
 import os
+import glob
+import csv
+from math import sqrt
 
-sumclass=[0,0,0,0,0,0,0,0,0]
-save_path_pola = "pola kalung"
+##jarak euclide
+def euclidean_distance(row1, row2):
+    distance = 0.0
+    for i in range(len(row1) - 1):
+        distance += (row1[i] - row2[i]) ** 2
+    return sqrt(distance)
 
-#Mengambil gambar tiap folder kelas
-for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\kalung sapi\*"):
+
+##ngecek yg terbaik
+def get_best_matching_unit(codebooks, test_row):
+    distances = list()
+    for codebook in codebooks:
+        dist = euclidean_distance(codebook, test_row)
+        distances.append((codebook, dist))
+    distances.sort(key=lambda tup: tup[1])
+    return distances[0][0]
+
+codebooks = np.genfromtxt('weight.csv', delimiter=',')
+
+count_true = 0
+count_total = 0
+
+##TESTING DARI FOLDER##
+for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\gambar testing\*"):
     print(class_image_path)
     if (class_image_path.split("\\")[-1] == 'Kelas 1'): neck_class = 1
     if (class_image_path.split("\\")[-1] == 'Kelas 2'): neck_class = 2
@@ -19,38 +39,48 @@ for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\kalung sapi\*"):
     if (class_image_path.split("\\")[-1] == 'Kelas 7'): neck_class = 7
     if (class_image_path.split("\\")[-1] == 'Kelas 8'): neck_class = 8
     f = True
-    class_folder = "Kelas "+str(neck_class)
-    new_save_path = os.path.join(save_path_pola,class_folder)
-    print("PATH ==",new_save_path)
     for image_path in glob.glob(os.path.join(class_image_path, "*.bmp")):
         print(image_path)
-        # if(neck_class!=7):
-        #     break
-        x=str(neck_class)+"-class-"+str(sumclass[neck_class])
-        name = x + "-test.bmp"
-        print(name)
-        print(type(name))
+#######################
+
+################# ngambil gambar
+# nameimg="buattest8.bmp"
         im_gray = cv2.imread(image_path,0)
         thresh = 127
         im_binerr = cv2.threshold(im_gray, thresh, 255, cv2.THRESH_BINARY)[1]
         im_gray = cv2.medianBlur(im_gray,5)
         im_biner = cv2.cvtColor(im_gray, cv2.COLOR_GRAY2BGR)
 
+        print(neck_class)
+        kelas = "Kelas "+str(neck_class)
+
         arr = []
         v = []
-        if(neck_class==7):
-            houghparam=35
-        else:
-            houghparam=55
+        # if(neck_class==7):
+        #     houghparam=35
+        # else:
+        #     houghparam=55
 
         try:
-
+            houghparam = 35
             circles = cv2.HoughCircles(im_gray, cv2.HOUGH_GRADIENT, 1, 100, param1=290, param2=houghparam, minRadius=0, maxRadius=0)
             circles = np.uint16(np.around(circles))
             for i in circles[0, :]:
                 cv2.circle(im_biner, (i[0], i[1]), i[2], (0, 255, 255), 2)
                 cv2.circle(im_biner, (i[0], i[1]), 2, (0, 0, 255), 112)
+        except Exception:
+            try:
+                houghparam = 55
+                circles = cv2.HoughCircles(im_gray, cv2.HOUGH_GRADIENT, 1, 100, param1=290, param2=houghparam, minRadius=0,
+                                           maxRadius=0)
+                circles = np.uint16(np.around(circles))
+                for i in circles[0, :]:
+                    cv2.circle(im_biner, (i[0], i[1]), i[2], (0, 255, 255), 2)
+                    cv2.circle(im_biner, (i[0], i[1]), 2, (0, 0, 255), 112)
+            except Exception:
+                pass
 
+        try:
             flag = 1
             row, col, ch = im_biner.shape
             graykanvas = np.zeros((row, col, 1), np.uint8)
@@ -69,16 +99,17 @@ for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\kalung sapi\*"):
             im_hasil = cv2.subtract(graykanvas, im_gray)
 
             hasil_crop = im_hasil[x:x + 112, y - 56:y + 56]  # im awe [y,x]
-            cv2.imshow("hasil crop", hasil_crop)
             thresh = 130
 
             kernel = np.ones((5, 5), np.uint8)
 
             crop_biner = cv2.threshold(hasil_crop, thresh, 255, cv2.THRESH_BINARY)[1]
+            cv2.imwrite("test-asht.bmp",crop_biner)
+            # cv2.imshow("test",crop_biner)
 
 
 
-            cv2.imwrite(os.path.join(new_save_path,name),crop_biner)
+            # cv2.imwrite(os.path.join(new_save_path,name),crop_biner)
 
             row, col= crop_biner.shape
             for r in range(0,row):
@@ -96,26 +127,40 @@ for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\kalung sapi\*"):
             v=v/max(v)
             v=[int(round(l)) for l in v]
 
-            arr.append(name)
+            # arr.append(nameimg)
             for d in v:
                 arr.append(d)
-            arr.append(neck_class)
+
             print(arr)
 
 
-            csvfile = "datavector.csv"
+            hasil = get_best_matching_unit(codebooks, arr)
+            print(codebooks)
+            print(arr[1:])
+            if hasil[-1] == 1: print("Kelas 1")
+            if hasil[-1] == 2: print("Kelas 2")
+            if hasil[-1] == 3: print("Kelas 3")
+            if hasil[-1] == 4: print("Kelas 4")
+            if hasil[-1] == 5: print("Kelas 5")
+            if hasil[-1] == 6: print("Kelas 6")
+            if hasil[-1] == 7: print("Kelas 7")
+            if hasil[-1] == 8: print("Kelas 8")
 
-            with open(csvfile, 'a+',newline='') as output:
-                writer = csv.writer(output, lineterminator=',')
-                for val in arr[:-1]:
-                    writer.writerow([val])
-                writer = csv.writer(output, lineterminator='\n')
-                writer.writerow([arr[-1]])
-
-            sumclass[neck_class]=sumclass[neck_class]+1
+            if hasil[-1] == neck_class:
+                count_true+=1
+            count_total+=1
 
         except Exception:
             pass
 
-        if (sumclass[neck_class]==50):
-            break
+
+# cv2.imshow('test', crop_biner)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
+accur = count_true/count_total
+
+print(" ")
+print("Jumlah testing benar = ", count_true)
+print("Total testing = ",count_total)
+print("Accuracy = ", accur)

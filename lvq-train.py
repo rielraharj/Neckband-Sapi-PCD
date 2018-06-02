@@ -2,8 +2,8 @@ import numpy as np
 import csv
 from random import seed
 from math import sqrt
-##LVQ
 
+##LVQ
 ##jarak euclide
 def euclidean_distance(row1, row2):
     distance = 0.0
@@ -38,13 +38,39 @@ def train_codebooks(train, n_codebooks, lrate, epochs):
         print('>epoch=%d, lrate=%.3f, error=%.3f' % (epoch, rate, sum_error))
     return codebooks
 
+weight = "initial-weight.csv"
+
+
+csvfile = "datavector.csv"
+
+codebooks=[]
+with open(weight, "r") as f:
+    reader = csv.reader(f, delimiter=",")
+    for i, line in enumerate(reader):
+        # print ('line[{}] = {}'.format(i, line))
+        a = []
+        for x in line:
+            a.append(int(x))
+        codebooks.append(list(a))
+print (codebooks)
+
+vectorzone = []
+with open(csvfile, "r") as f:
+    reader = csv.reader(f, delimiter=",")
+    for i, line in enumerate(reader):
+        # print ('line[{}] = {}'.format(i, line))
+        a = []
+        for x in line[1:]:
+            a.append(int(x))
+        vectorzone.append(list(a))
+print(vectorzone)
 # Test the training function
 seed(1)
-dataset = fruit_arr
-learn_rate = 0.3
-n_epochs = 100
+dataset = vectorzone[1:]
+learn_rate = 0.05
+n_epochs = 150
 n_codebooks = 8
 
 train_codebooks(dataset, n_codebooks, learn_rate, n_epochs)
-np.savetxt("train.csv", codebooks, delimiter=",")
+np.savetxt("weight.csv", codebooks, delimiter=",")
 print('Codebooks: %s' % codebooks)
