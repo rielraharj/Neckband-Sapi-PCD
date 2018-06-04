@@ -36,6 +36,7 @@ def train_codebooks(train, n_codebooks, lrate, epochs):
                 else:
                     bmu[i] -= rate * error
         print('>epoch=%d, lrate=%.3f, error=%.3f' % (epoch, rate, sum_error))
+        # print(codebooks)
     return codebooks
 
 weight = "initial-weight.csv"
@@ -60,17 +61,17 @@ with open(csvfile, "r") as f:
     for i, line in enumerate(reader):
         # print ('line[{}] = {}'.format(i, line))
         a = []
-        for x in line[1:]:
+        for x in line[2:]:
             a.append(int(x))
         vectorzone.append(list(a))
 print(vectorzone)
 # Test the training function
 seed(1)
-dataset = vectorzone[1:]
+dataset = vectorzone[2:]
 learn_rate = 0.05
 n_epochs = 150
 n_codebooks = 8
 
-train_codebooks(dataset, n_codebooks, learn_rate, n_epochs)
+codebooks=train_codebooks(dataset, n_codebooks, learn_rate, n_epochs)
 np.savetxt("weight.csv", codebooks, delimiter=",")
 print('Codebooks: %s' % codebooks)

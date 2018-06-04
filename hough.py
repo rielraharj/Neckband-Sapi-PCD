@@ -95,8 +95,11 @@ for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\kalung sapi\*"):
             print(v)
             v=v/max(v)
             v=[int(round(l)) for l in v]
+            if(sum(v[:56])<sum(v[56:])):
+                v=v[::-1]
 
             arr.append(name)
+            arr.append(image_path.split("\\")[-1])
             for d in v:
                 arr.append(d)
             arr.append(neck_class)

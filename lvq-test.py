@@ -27,6 +27,17 @@ codebooks = np.genfromtxt('weight.csv', delimiter=',')
 count_true = 0
 count_total = 0
 
+sumclass=[0,0,0,0,0,0,0,0,0]
+save_path_pola = "pola testing"
+
+jumlahgambar=0
+
+filejumlah=open("jumlah-testing.txt","r")
+iter_testing = filejumlah.read()
+iter_testing = int(iter_testing)
+print(iter_testing)
+filejumlah.close()
+
 ##TESTING DARI FOLDER##
 for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\gambar testing\*"):
     print(class_image_path)
@@ -39,12 +50,21 @@ for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\gambar testing\*")
     if (class_image_path.split("\\")[-1] == 'Kelas 7'): neck_class = 7
     if (class_image_path.split("\\")[-1] == 'Kelas 8'): neck_class = 8
     f = True
+
+    class_folder = "Kelas " + str(neck_class)
+    new_save_path = os.path.join(save_path_pola, class_folder)
+
     for image_path in glob.glob(os.path.join(class_image_path, "*.bmp")):
         print(image_path)
 #######################
 
 ################# ngambil gambar
 # nameimg="buattest8.bmp"
+        x = str(neck_class) + "-class-" + str(sumclass[neck_class])
+        name = x + "-hasil_test.bmp"
+
+        jumlahgambar=jumlahgambar+1
+
         im_gray = cv2.imread(image_path,0)
         thresh = 127
         im_binerr = cv2.threshold(im_gray, thresh, 255, cv2.THRESH_BINARY)[1]
@@ -54,6 +74,7 @@ for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\gambar testing\*")
         print(neck_class)
         kelas = "Kelas "+str(neck_class)
 
+        hasilarr = []
         arr = []
         v = []
         # if(neck_class==7):
@@ -62,7 +83,7 @@ for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\gambar testing\*")
         #     houghparam=55
 
         try:
-            houghparam = 35
+            houghparam = 55
             circles = cv2.HoughCircles(im_gray, cv2.HOUGH_GRADIENT, 1, 100, param1=290, param2=houghparam, minRadius=0, maxRadius=0)
             circles = np.uint16(np.around(circles))
             for i in circles[0, :]:
@@ -70,7 +91,7 @@ for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\gambar testing\*")
                 cv2.circle(im_biner, (i[0], i[1]), 2, (0, 0, 255), 112)
         except Exception:
             try:
-                houghparam = 55
+                houghparam = 35
                 circles = cv2.HoughCircles(im_gray, cv2.HOUGH_GRADIENT, 1, 100, param1=290, param2=houghparam, minRadius=0,
                                            maxRadius=0)
                 circles = np.uint16(np.around(circles))
@@ -78,6 +99,7 @@ for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\gambar testing\*")
                     cv2.circle(im_biner, (i[0], i[1]), i[2], (0, 255, 255), 2)
                     cv2.circle(im_biner, (i[0], i[1]), 2, (0, 0, 255), 112)
             except Exception:
+                sumclass[0]=sumclass[0]+1
                 pass
 
         try:
@@ -109,7 +131,7 @@ for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\gambar testing\*")
 
 
 
-            # cv2.imwrite(os.path.join(new_save_path,name),crop_biner)
+            cv2.imwrite(os.path.join(new_save_path,name),crop_biner)
 
             row, col= crop_biner.shape
             for r in range(0,row):
@@ -126,6 +148,8 @@ for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\gambar testing\*")
             print(v)
             v=v/max(v)
             v=[int(round(l)) for l in v]
+            if (sum(v[:56]) < sum(v[56:])):
+                v = v[::-1]
 
             # arr.append(nameimg)
             for d in v:
@@ -150,7 +174,24 @@ for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\gambar testing\*")
                 count_true+=1
             count_total+=1
 
+            hasilarr.append(name)
+            hasilarr.append(image_path.split("\\")[-1])
+            hasilarr.append(hasil[-1])
+            hasilarr.append(neck_class)
+
+            csvfile = "hasiltest.csv"
+
+            with open(csvfile, 'a', newline='') as output:
+                writer = csv.writer(output, lineterminator=',')
+                for val in hasilarr[:-1]:
+                    writer.writerow([val])
+                writer = csv.writer(output, lineterminator='\n')
+                writer.writerow([hasilarr[-1]])
+
+            sumclass[neck_class] = sumclass[neck_class] + 1
+
         except Exception:
+            sumclass[0] = sumclass[0] + 1
             pass
 
 
@@ -162,5 +203,26 @@ accur = count_true/count_total
 
 print(" ")
 print("Jumlah testing benar = ", count_true)
-print("Total testing = ",count_total)
+print("Total testing dilakukan= ",count_total)
 print("Accuracy = ", accur)
+print(" ")
+print("Jumlah total gambar = ", jumlahgambar)
+print("Total gambar error = ",sumclass[0])
+
+iter_testing += 1
+
+filesummary = open("summary-testing.txt","a")
+filesummary.write("====== TESTING KE-"+str(iter_testing)+" ======\n")
+filesummary.write("Total gambar testing = "+ str(jumlahgambar)+"\n")
+filesummary.write("Total gambar error = "+str(sumclass[0])+"\n")
+filesummary.write("Jumlah testing benar = "+str(count_true)+"\n")
+filesummary.write("Total testing dilakukan= "+str(count_total)+"\n")
+filesummary.write("Accuracy = "+str(accur)+"\n")
+filesummary.write("\n")
+filesummary.close()
+
+
+
+filejumlah=open("jumlah-testing.txt","w")
+filejumlah.write(str(iter_testing))
+filejumlah.close()
