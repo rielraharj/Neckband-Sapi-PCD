@@ -1,0 +1,14 @@
+====== TESTING KE-1 ======
+Total gambar testing = 116
+Total gambar error = 17
+Jumlah testing benar = 58
+Total testing dilakukan= 101
+Accuracy = 0.5742574257425742
+
+====== TESTING KE-2 ======
+Total gambar testing = 206
+Total gambar error = 24
+Jumlah testing benar = 117
+Total testing dilakukan= 186
+Accuracy = 0.6290322580645161
+

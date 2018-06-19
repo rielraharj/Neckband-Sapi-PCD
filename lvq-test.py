@@ -131,7 +131,7 @@ print("Total testing dilakukan= ",count_total)
 print("Accuracy = ", accur)
 print(" ")
 print("Jumlah total gambar = ", jumlahgambar)
-count_error = count_total-count_true
+count_error = jumlahgambar-count_total
 print("Total gambar error = ",count_error)
 
 iter_testing += 1
