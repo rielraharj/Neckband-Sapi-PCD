@@ -6,6 +6,7 @@ import csv
 from math import sqrt
 import lvq
 import img_processing as improc
+import confusion_matrix as cm
 
 
 
@@ -122,6 +123,8 @@ for class_image_path in glob.glob("D:\PycharmProjects\PCDSAPI\gambar testing\*")
 # cv2.imshow('test', crop_biner)
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
+
+cm.create_confusion_matrix(csvfile)
 
 accur = count_true/count_total
 
